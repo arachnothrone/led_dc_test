@@ -16,33 +16,73 @@ typedef struct
 } Sensor_Readings_T;
 
 static Sensor_Readings_T dataTable[NUM_OR_RECORDS] = {0};
-unsigned long int taskPeriodMeasStart   = 0;
-unsigned long int taskPeriodMeasStop    = 0;
 
 void setup()
 {
     Serial.begin(115200);
 }
 
-void loop()
+/**
+ * This function reads CdS Cell data from analog input A0 into a data array.
+ * Each record has execution time measurement in microseconds.
+ * 
+ * \param   pDataTable  - pointer to an array of records Sensor_Readings_T
+ * \param   numberOfReadings - int number of records
+ * 
+ * \return  void
+ */
+void readDataSet(Sensor_Readings_T* pDataTable, int numberOfReadings)
 {
-    for (int i = 0; i < NUM_OR_RECORDS; i++)
+    for (int i = 0; i < numberOfReadings; i++)
     {
-        taskPeriodMeasStart = micros();
-        dataTable[i].cdsCellValue = analogRead(A0);
-        taskPeriodMeasStop = micros();
-        dataTable[i].timeIntervalUs = taskPeriodMeasStop - taskPeriodMeasStart;
+        unsigned long int timeStart = micros();
+        (pDataTable + i)->cdsCellValue = analogRead(A0);
+        unsigned long int timeStop = micros();
+        (pDataTable + i)->timeIntervalUs = timeStop - timeStart;
     }
+}
 
-    for (int i = 0; i < NUM_OR_RECORDS; i++)
+/**
+ * Function performs the output of all the records from the array pointed by 
+ * pDataTable into a serial interface.
+ * 
+ * \param   pDataTable - poiter to an array of records
+ * \param   numberOfReadings - int number of readings
+ * 
+ * \return  void
+ */
+void printDataSetSerial(Sensor_Readings_T* pDataTable, int numberOfReadings)
+{
+    for (int i = 0; i < numberOfReadings; i++)
     {
         Serial.print(F("CdS_cell: "));
-        Serial.print(dataTable[i].cdsCellValue);
+        Serial.print((pDataTable + i)->cdsCellValue);
         Serial.print(F(" period_us: "));
-        Serial.println(dataTable[i].timeIntervalUs);
+        Serial.println((pDataTable + i)->timeIntervalUs);
     }
+}
+
+void loop()
+{
+    unsigned int execTimeStart = millis();
     
-    Serial.println(F("--------------------"));
-    delay(500);
+    /* Read light sensor data set with execution time for each record */
+    readDataSet(dataTable, NUM_OR_RECORDS);
+
+    unsigned int execTimeMiddle = millis();
+
+    /* Print the whole data array to serial port */
+    printDataSetSerial(dataTable, NUM_OR_RECORDS);
+    
+    unsigned int execTimeStop = millis();
+
+    Serial.print(F("readDataSet execution time: "));
+    Serial.print(execTimeMiddle - execTimeStart);
+    Serial.print(F(" ms, printDataSetSerial execution time: "));
+    Serial.print(execTimeStop - execTimeMiddle);
+    Serial.println(F(" ms\n--------------------"));
+
+    /* Delay before next loop for IDE program uploading purpuses */
+    delay(5000);
 
 }
