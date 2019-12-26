@@ -11,8 +11,8 @@
 
 typedef struct
 {
-  unsigned int cdsCellValue;
-  unsigned int timeIntervalUs;
+  unsigned int cdsCellValue;        /* 10-bit A0 value */
+  unsigned int timeIntervalUs;      /* execution time of current cycle */
 } Sensor_Readings_T;
 
 static Sensor_Readings_T dataTable[NUM_OR_RECORDS] = {0};
@@ -76,7 +76,7 @@ void loop()
     
     unsigned int execTimeStop = millis();
 
-    Serial.print(F("readDataSet execution time: "));
+    Serial.print(F("\nreadDataSet execution time: "));
     Serial.print(execTimeMiddle - execTimeStart);
     Serial.print(F(" ms, printDataSetSerial execution time: "));
     Serial.print(execTimeStop - execTimeMiddle);
