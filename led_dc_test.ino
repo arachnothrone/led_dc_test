@@ -7,12 +7,14 @@
 
 #include <Arduino.h>
 
-#define NUM_OR_RECORDS (500)
+#define NUM_OR_RECORDS (100)
+#define READING_TASK_PERIOD_US (200)
 
 typedef struct
 {
-  unsigned int cdsCellValue;        /* 10-bit A0 value */
-  unsigned int timeIntervalUs;      /* execution time of current cycle */
+    unsigned int cdsCellValue;          /* 10-bit A0 value */
+    unsigned int timeIntervalUs;        /* execution time of current cycle */
+    unsigned int taskPeriodUs;          /* temporary */
 } Sensor_Readings_T;
 
 static Sensor_Readings_T dataTable[NUM_OR_RECORDS] = {0};
@@ -20,6 +22,7 @@ static Sensor_Readings_T dataTable[NUM_OR_RECORDS] = {0};
 void setup()
 {
     Serial.begin(115200);
+    delay(3000);
 }
 
 /**
@@ -33,12 +36,27 @@ void setup()
  */
 void readDataSet(Sensor_Readings_T* pDataTable, int numberOfReadings)
 {
+    unsigned long int   timeStart;
+    unsigned long int   timeStop;
+    unsigned int        timeDelta;
+    unsigned long int   timeTaskFull;
     for (int i = 0; i < numberOfReadings; i++)
     {
-        unsigned long int timeStart = micros();
+        timeStart = micros();
         (pDataTable + i)->cdsCellValue = analogRead(A0);
-        unsigned long int timeStop = micros();
-        (pDataTable + i)->timeIntervalUs = timeStop - timeStart;
+        //delayMicroseconds(random(70));
+        timeStop = micros();
+        timeDelta = timeStop - timeStart;
+
+        /* Adjust delay value if execution time is larger than period */
+        timeDelta = timeDelta > READING_TASK_PERIOD_US ? READING_TASK_PERIOD_US : timeDelta;
+
+        (pDataTable + i)->timeIntervalUs = timeDelta;
+
+        /* Delay to keep period constant */
+        delayMicroseconds(READING_TASK_PERIOD_US - timeDelta);
+        timeTaskFull = micros();
+        (pDataTable + i)->taskPeriodUs = timeTaskFull - timeStart;
     }
 }
 
@@ -57,8 +75,10 @@ void printDataSetSerial(Sensor_Readings_T* pDataTable, int numberOfReadings)
     {
         Serial.print(F("CdS_cell: "));
         Serial.print((pDataTable + i)->cdsCellValue);
-        Serial.print(F(" period_us: "));
-        Serial.println((pDataTable + i)->timeIntervalUs);
+        Serial.print(F(" A0_reading_delay_us: "));
+        Serial.print((pDataTable + i)->timeIntervalUs);
+        Serial.print(F(" taskPeriod_us: "));
+        Serial.println((pDataTable + i)->taskPeriodUs);
     }
 }
 
