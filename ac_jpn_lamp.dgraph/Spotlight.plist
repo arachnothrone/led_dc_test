@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Labels</key>
+	<string>AC lamp pulse
+time, us (1 = 200 us)
+CdS value
+CdS_Japanese
+This interval is
+equal to 2 ms
+Frequency = 1 / (40 * 0.2 ms) = 125 Hz
+One period from...
+... to
+</string>
+	<key>Text</key>
+	<string></string>
+</dict>
+</plist>
